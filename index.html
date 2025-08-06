@@ -127,28 +127,19 @@
         .fruit-item.used { transform: scale(0) rotate(360deg); opacity: 0; pointer-events: none; }
         
         .fruit-emoji {
-            font-size: clamp(4rem, 15vw, 8rem);
-            line-height: 0.9;
-            flex-grow: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: clamp(4rem, 15vw, 8rem); line-height: 0.9; flex-grow: 2;
+            display: flex; align-items: center; justify-content: center;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
         }
         .fruit-name {
-            font-size: clamp(1.3rem, 4vw, 2rem);
-            font-weight: 800;
-            line-height: 1.1;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-            flex-shrink: 0;
-            padding: 2px 4px;
+            font-size: clamp(1.3rem, 4vw, 2rem); font-weight: 800; line-height: 1.1;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.7); flex-shrink: 0; padding: 2px 4px;
         }
         
         @media (max-width: 480px) {
             .container { padding: 15px; } h1 { font-size: 2rem; } h2 { font-size: 1.2rem; }
             #fruit-grid { gap: 8px; padding: 10px; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
-            .fruit-emoji { font-size: 3.5rem; }
-            .fruit-name { font-size: 1.3rem; }
+            .fruit-emoji { font-size: 3.5rem; } .fruit-name { font-size: 1.3rem; }
             .btn { padding: 12px 20px; font-size: 1rem; }
             .btn-start { font-size: 1.2rem; padding: 15px 25px; }
         }
@@ -185,12 +176,9 @@
         #winner-screen { cursor: default; }
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         #winner-name { 
-            font-size: 3.5rem; 
-            font-weight: 800; 
-            color: var(--primary-color); 
+            font-size: 3.5rem; font-weight: 800; color: var(--primary-color); 
             text-shadow: 3px 3px 0px var(--secondary-color), 6px 6px 0px rgba(0,0,0,0.3);
-            margin: 20px 0;
-            line-height: 1.2;
+            margin: 20px 0; line-height: 1.2;
         }
         
         .popup-title { font-size: 2.5rem; color: var(--btn-eliminate-bg); margin-bottom: 20px; }
@@ -293,6 +281,15 @@
     
     <div id="toast"></div>
 
+    <audio id="music-bg" src="game.mp3" loop></audio>
+    <audio id="sound-start" src="gamestart.mp3" preload="auto"></audio>
+    <audio id="sound-click" src="squish.mp3" preload="auto"></audio>
+    <audio id="sound-elimination" src="exclusion.mp3" preload="auto"></audio>
+    <audio id="sound-win" src="celebrate.mp3" preload="auto"></audio>
+    <audio id="sound-bomb" src="bomb.mp3" preload="auto"></audio>
+    <audio id="sound-shield" src="protect.mp3" preload="auto"></audio>
+    <audio id="sound-countdown" src="countdown.mp3" preload="auto" loop></audio>
+    <audio id="sound-re-add" src="return.mp3" preload="auto"></audio>
     <script>
         const fruits = [
             'تفاح 🍎', 'موز 🍌', 'برتقال 🍊', 'عنب 🍇', 'فراولة 🍓', 'كرز 🍒', 'أناناس 🍍', 'بطيخ 🍉',
@@ -306,12 +303,29 @@
         let gameEnded = false, bombExploded = false, bombAvailableForPlanting = false;
         let playerShields = {};
         let randomShieldOnBoard = true;
+        let musicStarted = false;
+
+        function startMusicOnFirstInteraction() {
+            if (!musicStarted) {
+                const music = document.getElementById('music-bg');
+                if (music) {
+                    music.volume = 0.3;
+                    music.play().catch(e => console.error("Music play failed:", e));
+                    musicStarted = true;
+                    document.body.removeEventListener('click', startMusicOnFirstInteraction);
+                }
+            }
+        }
 
         function startTheGame() {
             const names = document.getElementById('player-names').value.split('\n').map(name => name.trim()).filter(Boolean);
             if (names.length < 2) {
                 showToast('يجب إدخال اسمين على الأقل!'); return;
             }
+
+            document.getElementById('sound-start')?.play();
+            document.body.addEventListener('click', startMusicOnFirstInteraction);
+            
             document.getElementById('active-players-section').style.display = 'block';
             document.getElementById('eliminated-section').style.display = 'block';
 
@@ -382,6 +396,8 @@
         }
 
         function selectFruit(assignment) {
+            document.getElementById('sound-click')?.play();
+
             if (assignment.used || gameEnded) return;
             assignment.used = true;
             document.getElementById(assignment.id).classList.add('used');
@@ -414,6 +430,8 @@
         }
 
         function handleBomb(bombAssignment) {
+            document.getElementById('sound-bomb')?.play();
+
             bombExploded = true;
             bombAvailableForPlanting = true;
             let reshuffleNeeded = false;
@@ -474,6 +492,8 @@
         }
 
         function startCountdown() {
+            document.getElementById('sound-countdown')?.play();
+
             let timeLeft = 30;
             const timerElement = document.getElementById('countdown-timer');
             timerElement.style.display = 'block';
@@ -482,11 +502,21 @@
             countdownInterval = setInterval(() => {
                 timeLeft--; updateTimer();
                 if (timeLeft <= 0) {
+                    const countdownSound = document.getElementById('sound-countdown');
+                    if (countdownSound) {
+                        countdownSound.pause();
+                        countdownSound.currentTime = 0;
+                    }
                     clearInterval(countdownInterval); countdownInterval = null;
                     if (activePlayers.length === 1) showWinner(activePlayers[0]);
                     else showWinner('لا يوجد فائز!');
                 }
                 if (activePlayers.length > 1) {
+                    const countdownSound = document.getElementById('sound-countdown');
+                    if (countdownSound) {
+                        countdownSound.pause();
+                        countdownSound.currentTime = 0;
+                    }
                     clearInterval(countdownInterval); countdownInterval = null;
                     timerElement.style.display = 'none';
                 }
@@ -494,6 +524,12 @@
         }
 
         function showEliminationPopup(message, type = 'elimination') {
+            if (type === 'shield' || (type === 'bomb' && message.includes('تم إنقاذ'))) {
+                 document.getElementById('sound-shield')?.play();
+            } else if (type !== 'bomb') {
+                 document.getElementById('sound-elimination')?.play();
+            }
+
             const popupTitle = document.getElementById('popup-title-text');
             const popupName = document.getElementById('eliminated-player-name');
             if (type === 'bomb') { popupTitle.textContent = '💣 انفجار! 💣'; popupTitle.style.color = 'var(--btn-eliminate-bg)'; } 
@@ -507,22 +543,17 @@
         
         function updateGameInfo() { document.getElementById('active-players-count').textContent = `النشطون: ${activePlayers.length} | المقصيون: ${eliminatedPlayers.length}`; }
 
-        // === START: FIXED FUNCTION ===
         function updateEliminatedList() {
             const list = document.getElementById('eliminated-list');
-            list.innerHTML = ''; // Clear the list first
+            list.innerHTML = ''; 
 
-            // Handle the special button separately to ensure no errors
             const reAddOldestBtn = document.getElementById('btn-re-add-oldest');
-            if (reAddOldestBtn) { // Check if the button exists
-                // Show the button only if there are players to re-add
+            if (reAddOldestBtn) {
                 reAddOldestBtn.style.display = eliminatedPlayers.length > 0 ? 'inline-block' : 'none';
             }
 
-            // Now, populate the list of eliminated players
             eliminatedPlayers.forEach((player, index) => {
                 const li = document.createElement('li');
-
                 const button = document.createElement('button');
                 button.className = 'btn-re-add';
                 button.setAttribute('data-player-name', player);
@@ -538,8 +569,6 @@
                 list.appendChild(li);
             });
         }
-        // === END: FIXED FUNCTION ===
-
 
         function getSafePlayerId(playerName) { return `player-id-${playerName.replace(/[^a-zA-Z0-9أ-ي]/g, '_')}`; }
         
@@ -567,6 +596,8 @@
         
         function reAddPlayer(playerName) {
             if (eliminatedPlayers.includes(playerName)) {
+                document.getElementById('sound-re-add')?.play();
+
                 if (gameEnded) {
                     gameEnded = false;
                     document.getElementById('winner-screen').style.display = 'none';
@@ -580,7 +611,15 @@
                 showToast(`تم إعادة ${playerName} للعبة! 🎮`);
                 
                 if (countdownInterval) {
-                    clearInterval(countdownInterval); countdownInterval = null;
+                    // --- START: FIXED CODE FOR COUNTDOWN SOUND ---
+                    const countdownSound = document.getElementById('sound-countdown');
+                    if (countdownSound) {
+                        countdownSound.pause();
+                        countdownSound.currentTime = 0;
+                    }
+                    // --- END: FIXED CODE ---
+                    clearInterval(countdownInterval); 
+                    countdownInterval = null;
                     document.getElementById('countdown-timer').style.display = 'none';
                 }
                 setupGame();
@@ -589,7 +628,6 @@
 
         function reAddOldestEliminatedPlayer() {
             if (eliminatedPlayers.length > 0) {
-                // Get the LAST player in the array (who was the FIRST to be eliminated)
                 const playerToReAdd = eliminatedPlayers[eliminatedPlayers.length - 1]; 
                 reAddPlayer(playerToReAdd);
             }
@@ -619,6 +657,11 @@
                 showToast(`أهلاً باللاعب الجديد ${cleanName}!`);
                 
                 if (countdownInterval) {
+                     const countdownSound = document.getElementById('sound-countdown');
+                    if (countdownSound) {
+                        countdownSound.pause();
+                        countdownSound.currentTime = 0;
+                    }
                     clearInterval(countdownInterval); countdownInterval = null;
                     document.getElementById('countdown-timer').style.display = 'none';
                 }
@@ -649,6 +692,15 @@
         }
         
         function showWinner(winnerName) {
+            const music = document.getElementById('music-bg');
+            if (music) music.pause();
+            const countdownSound = document.getElementById('sound-countdown');
+            if (countdownSound) {
+                countdownSound.pause();
+                countdownSound.currentTime = 0;
+            }
+            document.getElementById('sound-win')?.play();
+
             gameEnded = true;
             document.getElementById('winner-name').textContent = winnerName;
             document.getElementById('winner-screen').style.display = 'flex';
@@ -673,6 +725,13 @@
         }
 
         function playAgain(isFirstTimeSetup = false) {
+            const music = document.getElementById('music-bg');
+            if (music) {
+                music.pause();
+                music.currentTime = 0;
+            }
+            musicStarted = false;
+            
             if (!isFirstTimeSetup) {
                 const currentPlayers = [...activePlayers, ...eliminatedPlayers];
                 document.getElementById('player-names').value = currentPlayers.join('\n');
