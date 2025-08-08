@@ -41,35 +41,10 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* --- START: NEW WATERMARK STYLE (GUARANTEED TO WORK) --- */
-        #global-watermark {
-            /* Positioning */
-            position: fixed; /* Fixed to the screen */
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-35deg); /* Center and rotate */
-
-            /* Appearance */
-            font-family: 'Changa', sans-serif;
-            font-size: clamp(5rem, 15vw, 12rem); /* Responsive size */
-            font-weight: 800;
-            color: rgba(255, 255, 255, 0.1); /* Subtle but visible white */
-            white-space: nowrap;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            
-            /* CRITICAL: Interaction and Layering */
-            z-index: 1; /* Above background, below content */
-            pointer-events: none; /* Allows clicking through the watermark */
-        }
-        /* --- END: NEW WATERMARK STYLE --- */
-
         .container {
             max-width: 1000px; margin: auto; background: rgba(0, 0, 0, 0.3);
             padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative; /* Ensure content can be layered on top */
-            z-index: 2; /* Place container above the watermark */
         }
 
         h1 {
@@ -146,7 +121,7 @@
             background: rgba(255,255,255,0.15); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative; aspect-ratio: 1; display: flex;
             flex-direction: column; align-items: center; justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.2); gap: 0;
+            border: 1px solid rgba(255,255,255,0.2); gap: 0;
         }
         .fruit-item:hover { transform: scale(1.1); background: rgba(255,255,255,0.3); }
         .fruit-item.used { transform: scale(0) rotate(360deg); opacity: 0; pointer-events: none; }
@@ -246,12 +221,10 @@
         .btn-plant-bomb:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4); background: linear-gradient(45deg, #c0392b, #a93226); }
         .btn-plant-bomb:disabled { background: #7f8c8d; cursor: not-allowed; transform: none; box-shadow: none; }
         .bomb-status { font-size: 0.9rem; color: #ecf0f1; margin-top: 8px; font-weight: 600; }
-
     </style>
 </head>
 <body>
     
-    <div id="global-watermark">RONY GAMES</div>
     <div id="startScreen" class="container screen active">
         <h1>🍎 حرب الفواكه 🍊</h1>
         <h2>مع روني</h2>
@@ -518,6 +491,7 @@
             }
         }
 
+        // --- START: MODIFIED/NEW HELPER FUNCTION ---
         function stopCountdown() {
             const countdownSound = document.getElementById('sound-countdown');
             if (countdownSound) {
@@ -531,6 +505,7 @@
             const timerElement = document.getElementById('countdown-timer');
             if(timerElement) timerElement.style.display = 'none';
         }
+        // --- END: MODIFIED/NEW HELPER FUNCTION ---
 
         function startCountdown() {
             document.getElementById('sound-countdown')?.play();
